@@ -42,16 +42,16 @@
     </div>
 
     <script>
-    // 获取 URL 上的 code 参数
+    // 获取 TikTok 回传的 code
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get("code");
+    const state = urlParams.get("state");
 
     if (code) {
-        // 重定向到你 App 的 scheme，例如 bwapp://tiktok_auth?code=xxx
-        window.location.href = "obbw://tiktok_auth?code=" + code;
+      window.location.href = "obbw://tiktok_auth?code=" + code + "&state=" + state;
     } else {
-        document.body.innerHTML = "<h2>登录失败，没有拿到 code</h2>";
+      document.body.innerHTML = "<h2>授权失败，没有拿到 code</h2>";
     }
-    </script>
+  </script>
 </body>
 </html>
