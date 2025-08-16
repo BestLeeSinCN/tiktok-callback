@@ -1,18 +1,51 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>TikTok Redirect</title>
-  <script>
-    // 获取 URL 参数，比如 ?code=xxx&state=yyy
-    const query = window.location.search;
-    // 定义你的 app scheme，这里是 bwapp
-    const appScheme = "bwapp://tiktok_auth" + query;
-    // 跳回 App
-    window.location.replace(appScheme);
-  </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Login Callback</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #000;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            padding: 2rem;
+        }
+        .spinner {
+            border: 3px solid #333;
+            border-top: 3px solid #fff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 1rem auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
-  <p>正在跳回 App...</p>
+    <div class="container">
+        <h2>TikTok 授权成功</h2>
+        <div class="spinner"></div>
+        <p>正在返回应用...</p>
+    </div>
+
+    <script>
+        // 简单处理：直接关闭页面返回应用
+        setTimeout(() => {
+            window.close();
+        }, 1000);
+    </script>
 </body>
 </html>
