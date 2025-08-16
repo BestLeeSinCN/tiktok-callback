@@ -48,7 +48,7 @@
 
     if (code) {
         // 重定向到你 App 的 scheme，例如 bwapp://tiktok_auth?code=xxx
-        window.location.href = "bwapp://tiktok_auth?code=" + code;
+        window.location.href = "obbw://tiktok_auth?code=" + code;
     } else {
         document.body.innerHTML = "<h2>登录失败，没有拿到 code</h2>";
     }
