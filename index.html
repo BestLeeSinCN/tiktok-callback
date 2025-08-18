@@ -42,16 +42,42 @@
     </div>
 
     <script>
-    // 获取 TikTok 回传的 code
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get("code");
-    const state = urlParams.get("state");
-
-    if (code) {
-      window.location.href = "obbw://tiktok_auth?code=" + code + "&state=" + state;
-    } else {
-      document.body.innerHTML = "<h2>授权失败，没有拿到 code</h2>";
-    }
-  </script>
+          // 获取 TikTok 回传的 code 和 state
+          const urlParams = new URLSearchParams(window.location.search);
+          const code = urlParams.get("code");
+          const state = urlParams.get("state");
+        
+          if (code) {
+            // 判断当前运行环境
+            const isInApp = /obbw/i.test(navigator.userAgent) || window.ReactNativeWebView;
+        
+            if (isInApp) {
+              // ✅ App 环境：使用自定义 Scheme 回调
+              window.location.href = "obbw://tiktok_auth?code=" + code + "&state=" + state;
+            } else {
+              // ✅ Web 环境：通过 postMessage 把 code 传给 Flutter WebView
+              if (window.opener) {
+                // 如果是新窗口打开（常见 Web 授权场景）
+                window.opener.postMessage(
+                  { code: code, state: state, provider: "tiktok" },
+                  "*"
+                );
+                window.close();
+              } else if (window.parent !== window) {
+                // 如果是内嵌 iframe / WebView
+                window.parent.postMessage(
+                  { code: code, state: state, provider: "tiktok" },
+                  "*"
+                );
+              } else {
+                // 兜底：直接显示成功信息
+                document.body.innerHTML =
+                  "<h2>授权成功，请返回应用</h2><p>Code: " + code + "</p>";
+              }
+            }
+          } else {
+            document.body.innerHTML = "<h2>授权失败，没有拿到 code</h2>";
+          }
+    </script>
 </body>
 </html>
