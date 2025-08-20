@@ -21,38 +21,135 @@
     p {
       color: #aaa;
     }
-    .code-box {
-      margin-top: 20px;
-      padding: 10px 20px;
-      border: 1px solid #fff;
-      border-radius: 8px;
-      background: #111;
+    .loading {
+      color: #0ff;
+      font-size: 18px;
+    }
+    .success {
       color: #0f0;
+    }
+    .error {
+      color: #f00;
     }
   </style>
 </head>
 <body>
   <h2>TikTok 授权结果</h2>
-  <div id="result"></div>
+  <div id="result" class="loading">正在处理授权结果...</div>
 
   <script>
-    function sendAuthResult(code, state) {
-      // 如果在移动端浏览器环境，尝试唤起 app
-      var ua = navigator.userAgent || navigator.vendor || window.opera;
-      if (/android/i.test(ua) || /iPhone|iPad|iPod/i.test(ua)) {
-        // scheme 回调
-        window.location.href = "obbw://tiktok_auth?code=" + code + "&state=" + state;
-      } else {
-        // web 环境，直接修改 URL，让 flutter web 拿到 query
-        window.location.href = window.location.origin + "/?code=" + code + "&state=" + state;
+    function handleAuthResult() {
+      try {
+        // 获取URL参数
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
+        const error = urlParams.get('error');
+        const errorDescription = urlParams.get('error_description');
+
+        console.log('Auth result:', { code, state, error, errorDescription });
+
+        // 检测设备类型
+        const ua = navigator.userAgent || navigator.vendor || window.opera;
+        const isMobile = /android/i.test(ua) || /iPhone|iPad|iPod/i.test(ua);
+
+        if (isMobile) {
+          // 移动端：使用 scheme 跳转回 App
+          handleMobileCallback(code, state, error, errorDescription);
+        } else {
+          // Web端：使用 postMessage 发送给父窗口
+          handleWebCallback(code, state, error, errorDescription);
+        }
+      } catch (e) {
+        console.error('处理授权结果时出错:', e);
+        document.getElementById('result').innerHTML = '<span class="error">处理授权结果时出错</span>';
       }
     }
-  
-    // TikTok 登录完成后调用
-    function onTikTokLoginSuccess(code, state) {
-      sendAuthResult(code, state);
+
+    function handleMobileCallback(code, state, error, errorDescription) {
+      // 构建 scheme URL
+      let schemeUrl = "obbw://tiktok_auth?";
+      const params = [];
+
+      if (code) params.push("code=" + encodeURIComponent(code));
+      if (state) params.push("state=" + encodeURIComponent(state));
+      if (error) params.push("error=" + encodeURIComponent(error));
+      if (errorDescription) params.push("error_description=" + encodeURIComponent(errorDescription));
+
+      schemeUrl += params.join('&');
+
+      console.log('跳转 scheme URL:', schemeUrl);
+
+      // 更新页面显示
+      if (error) {
+        document.getElementById('result').innerHTML = '<span class="error">授权失败: ' + (errorDescription || error) + '</span>';
+      } else if (code) {
+        document.getElementById('result').innerHTML = '<span class="success">授权成功，正在返回应用...</span>';
+      }
+
+      // 跳转回App
+      setTimeout(() => {
+        window.location.href = schemeUrl;
+      }, 1000);
+
+      // 备用方案：如果scheme跳转失败，尝试关闭页面
+      setTimeout(() => {
+        try {
+          window.close();
+        } catch (e) {
+          console.log('无法关闭窗口');
+        }
+      }, 3000);
+    }
+
+    function handleWebCallback(code, state, error, errorDescription) {
+      // Web端：向父窗口发送 postMessage
+      const messageData = {
+        provider: 'tiktok',
+        code: code,
+        state: state,
+        error: error,
+        error_description: errorDescription
+      };
+
+      console.log('发送 postMessage:', messageData);
+
+      // 更新页面显示
+      if (error) {
+        document.getElementById('result').innerHTML = '<span class="error">授权失败: ' + (errorDescription || error) + '</span>';
+      } else if (code) {
+        document.getElementById('result').innerHTML = '<span class="success">授权成功，正在关闭窗口...</span>';
+      }
+
+      // 向父窗口发送消息
+      if (window.opener) {
+        try {
+          window.opener.postMessage(messageData, '*');
+          // 延迟关闭窗口，确保消息被接收
+          setTimeout(() => {
+            window.close();
+          }, 500);
+        } catch (e) {
+          console.error('发送消息失败:', e);
+          document.getElementById('result').innerHTML = '<span class="error">发送消息失败，请手动关闭窗口</span>';
+        }
+      } else {
+        console.error('没有找到父窗口');
+        document.getElementById('result').innerHTML = '<span class="error">没有找到父窗口，请手动关闭</span>';
+      }
+    }
+
+    // 页面加载完成后处理授权结果
+    window.onload = function() {
+      console.log('页面加载完成，开始处理授权结果');
+      console.log('当前URL:', window.location.href);
+      handleAuthResult();
+    };
+
+    // 备用处理：如果页面已经加载完成
+    if (document.readyState === 'complete') {
+      handleAuthResult();
     }
   </script>
-
 </body>
 </html>
