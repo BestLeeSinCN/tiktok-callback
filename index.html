@@ -36,28 +36,23 @@
   <div id="result"></div>
 
   <script>
-    (function() {
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get("code");
-      const state = params.get("state");
-
-      if (code) {
-        // Web 环境：发送给父窗口（Flutter Web）
-        if (window.opener) {
-          window.opener.postMessage({ code, state }, "*");
-          document.getElementById("result").innerHTML =
-            "<p>授权成功，正在返回应用...</p>";
-          window.close();
-        } else {
-          // 如果不是弹窗模式（比如直接打开了回调页）
-          document.getElementById("result").innerHTML =
-            "<p>授权成功</p><div class='code-box'>Code: " + code + "</div>";
-        }
+    function sendAuthResult(code, state) {
+      // 如果在移动端浏览器环境，尝试唤起 app
+      var ua = navigator.userAgent || navigator.vendor || window.opera;
+      if (/android/i.test(ua) || /iPhone|iPad|iPod/i.test(ua)) {
+        // scheme 回调
+        window.location.href = "bwapp://tiktok_auth?code=" + code + "&state=" + state;
       } else {
-        document.getElementById("result").innerHTML =
-          "<p>授权失败，没有拿到 code</p>";
+        // web 环境，直接修改 URL，让 flutter web 拿到 query
+        window.location.href = window.location.origin + "/?code=" + code + "&state=" + state;
       }
-    })();
+    }
+  
+    // TikTok 登录完成后调用
+    function onTikTokLoginSuccess(code, state) {
+      sendAuthResult(code, state);
+    }
   </script>
+
 </body>
 </html>
