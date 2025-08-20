@@ -41,7 +41,7 @@
       var ua = navigator.userAgent || navigator.vendor || window.opera;
       if (/android/i.test(ua) || /iPhone|iPad|iPod/i.test(ua)) {
         // scheme 回调
-        window.location.href = "bwapp://tiktok_auth?code=" + code + "&state=" + state;
+        window.location.href = "obbw://tiktok_auth?code=" + code + "&state=" + state;
       } else {
         // web 环境，直接修改 URL，让 flutter web 拿到 query
         window.location.href = window.location.origin + "/?code=" + code + "&state=" + state;
